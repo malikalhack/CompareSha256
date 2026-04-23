@@ -49,7 +49,7 @@ def validate_py_version() -> bool:
 
 
 def get_hash(file_name: str) -> str:
-    hash_str = ""
+    hash_str = None
     try:
         with File(file_name, "rb") as opened_file:
             handler = opened_file.read()
@@ -108,6 +108,30 @@ def calc_and_store(dir: str, file_list: tuple, output_file: str) -> None:
         store_hash(param, hash, output_file)
 
 
+def compare_hashes(dir: str, file_list: tuple, checksums: list) -> None:
+    """Compares calculated hashes with given checksums"""
+    print("\nComparison results:")
+    print("-" * 70)
+    
+    # Process only first N files for N checksums
+    files_to_check = file_list[:len(checksums)]
+    
+    for i, file_name in enumerate(files_to_check):
+        if i >= len(checksums):
+            break
+            
+        file_path = dir + SEPARATOR + file_name
+        calculated_hash = get_hash(file_path)
+        expected_hash = checksums[i].lower()
+        
+        if calculated_hash == expected_hash:
+            print(f"✓ {file_name}: OK")
+        else:
+            print(f"✗ {file_name}: MISMATCH")
+            print(f"  Expected:   {expected_hash}")
+            print(f"  Calculated: {calculated_hash}")
+
+
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
@@ -161,10 +185,18 @@ if __name__ == "__main__":
     if not file_list:
         print("No files found for processing")
         sys.exit(1)
-    # Calculation and save to file mode
-    if not create_file(args.output):
-        sys.exit(1)
-    calc_and_store(args.directory, file_list, args.output)
-    print(f"\nChecksums saved to file: {args.output}")
+    # Operation mode: comparison or calculation
+    if args.checksums:
+        # Comparison mode with checksums
+        checksums_list = [s.strip() for s in args.checksums.split(',')]
+        compare_hashes(args.directory, file_list, checksums_list)
+    else:
+        # Calculation and save to file mode
+        if not create_file(args.output):
+            sys.exit(1)
+        calc_and_store(args.directory, file_list, args.output)
+        print(f"\nChecksums saved to file: {args.output}")
+    
+    print("")
     sys.exit(0)
 
