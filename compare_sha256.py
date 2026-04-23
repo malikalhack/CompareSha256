@@ -13,6 +13,18 @@ import argparse
 
 CHECKSUMS_FILE_NAME = "checksums.txt"
 
+
+class File:
+    def __init__(self, file_name, method):
+        self.file_obj = open(file_name, method)
+
+    def __enter__(self):
+        return self.file_obj
+
+    def __exit__(self, type, value, traceback):
+        self.file_obj.close()
+
+
 def validate_py_version() -> bool:
     bool_result = True
     major_version = sys.version_info.major
@@ -25,7 +37,19 @@ def validate_py_version() -> bool:
 
 
 def create_file(output_file: str) -> bool:
-    pass
+    result = False
+    try:
+        with File(output_file, "w") as opened_file:
+            opened_file.writelines("Algorithm   Hash                         ")
+            opened_file.writelines("                                      Fil")
+            opened_file.writelines("e name\n---------   ----                 ")
+            opened_file.writelines("                                         ")
+            opened_file.writelines("     ---------\n")
+            result = True
+    except OSError:
+        print("This path is not exist")
+
+    return result
 
 
 def find_all_files(dir: str, filter: bool = False) -> tuple:
