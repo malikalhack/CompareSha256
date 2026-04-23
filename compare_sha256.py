@@ -3,15 +3,27 @@
 """
 SHA256 Checksum Calculator and Verifier
 
+This module provides functionality to calculate and verify SHA256 checksums
+of files. It supports both batch processing of directories and verification
+of files against known checksums.
+
 Author: Anton Chernov
+Version: 1.0.0
 Date: 2026-02-09
 License: MIT
 """
 
 import sys
 import argparse
+from platform import system
+from hashlib import sha256
+from os import listdir
+from os.path import isfile, join
 
+OS = system().lower()
+SEPARATOR    = "\\" if OS == "windows" else "/"
 CHECKSUMS_FILE_NAME = "checksums.txt"
+VERSION = "1.0.0"
 
 
 class File:
@@ -36,6 +48,19 @@ def validate_py_version() -> bool:
     return bool_result
 
 
+def get_hash(file_name: str) -> str:
+    hash_str = ""
+    try:
+        with File(file_name, "rb") as opened_file:
+            handler = opened_file.read()
+            hash_obj = sha256()
+            hash_obj.update(handler)
+            hash_str = hash_obj.hexdigest()
+    except OSError:
+        print("This path is not exist")
+    return hash_str
+
+
 def create_file(output_file: str) -> bool:
     result = False
     try:
@@ -52,12 +77,35 @@ def create_file(output_file: str) -> bool:
     return result
 
 
+def store_hash(file_name: str, hash: str, output_file: str) -> None:
+    try:
+        with File(output_file, "a") as opened_file:
+            opened_file.writelines(f"SHA256      {hash}   {file_name}\n")
+    except OSError:
+        print("This path is not exist")
+
+
 def find_all_files(dir: str, filter: bool = False) -> tuple:
-    pass
+    SCRIPT_NAME = __file__.split(SEPARATOR)[-1]
+    file_names = []
+    try:
+        temp = listdir(dir)
+        if filter:
+            for f in temp:
+                if isfile(f) and f != CHECKSUMS_FILE_NAME and f != SCRIPT_NAME:
+                    file_names.append(f)
+        else:
+            file_names = [f for f in temp if isfile(join(dir, f))]
+    except OSError:
+        print("This path is not exist")
+    return tuple(file_names)
 
 
 def calc_and_store(dir: str, file_list: tuple, output_file: str) -> None:
-    pass
+    for param in file_list:
+        file_path = dir + SEPARATOR + param
+        hash = get_hash(file_path)
+        store_hash(param, hash, output_file)
 
 
 def parse_arguments():
