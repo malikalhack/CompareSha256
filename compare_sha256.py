@@ -125,9 +125,9 @@ def compare_hashes(dir: str, file_list: tuple, checksums: list) -> None:
         expected_hash = checksums[i].lower()
         
         if calculated_hash == expected_hash:
-            print(f"✓ {file_name}: OK")
+            print(f"  [V] {file_name}: OK")
         else:
-            print(f"✗ {file_name}: MISMATCH")
+            print(f"  [X] {file_name}: MISMATCH")
             print(f"  Expected:   {expected_hash}")
             print(f"  Calculated: {calculated_hash}")
 
